@@ -1,0 +1,340 @@
+What are the keywords in CAPL?
+CAPL uses reserved keywords from the C programming language. 
+Some common C keywords are: break, case, char, continue, default, 
+do, double, else, float, for, if, int, long, return, switch, while.
+ CAPL Data Types: The basic data types supported by the CAPL are integer
+, character, and floating-point,
+
+
+
+
+What is a timer in CAPL?
+In CAPL, the setTimer() function can be used to set timers for specified durations in milliseconds. 
+The function takes a timer name and duration as arguments. For example, setTimer(1, 1000) sets 
+timer 1 to expire after 1000ms. When the timer expires, the code block in the corresponding
+ "on timer event" will execute.
+
+
+
+What is sysvar in CAPL?
+CAPL scripting
+sysvar or System Variables are defined under tab Environment/System Variables, it can be accessed 
+everywhere in CANoe configuration. We define user sysvar to shared, route data around testing 
+environment between test nodes, simulated nodes, measurement nodes, CANoe panel.
+
+
+
+Why is CAPL used?
+The use of CAPL mainly for emulation and testing purposes namely: ﻿Node emulation. Netwok emulation. Node testing.
+
+
+How to give delay in CAPL script?
+Timer Initialization: Initialize the timer using the `setTimer` function. For example, `setTimer(myTimer, 200);
+` sets the timer to expire every 200 milliseconds. 3. Timer Expiration Event: Use the `on timer` event to define 
+actions that should occur when the timer expires.
+
+
+
+How to declare a message in CAPL?
+Sending message in CAPL
+
+Now, to send a message, we only need to put one of these lines into an event procedure:
+ output(msg1); output(msg2); Of course, we can also add data to the message before we
+ send it. The EngineData message has signals defined in the database, but the other message does not.
+
+
+
+
+Interview Questions
+
+
+CAPL scripting for periodic Tx,Inver the data transmitted everytime so that we will get alternate 1 and 0
+
+varialbles
+{
+message M1;  //define msg,timer,booleans
+Timer T1;
+int flag;
+}
+on start
+{
+setTimer (T1,100);
+}
+OnTimer T1
+{
+flag=!flag
+if(flag==0)
+{
+output(M1,0,0)
+}
+else
+{
+output(M2,0,1)
+}
+}
+-------------------------------------------------------
+
+CAPL scripting to send msg M1 at 100ms,M2 at 50ms and after 5ms M1 at 50ms and M2at 100ms
+
+
+
+variables
+{
+message M1;
+message M2;
+Timer X1;
+Timer X2;
+Timer intervalchange;
+}
+on start
+{
+setTimer(x1,100);
+setTimer(x2,50);
+setTimer (intervalchange,5);
+}
+OnTimer x1
+{
+output(M1);
+}
+OnTimer x2
+{
+output(M2);
+}
+OnTimer intervalchange
+{
+cancelTimer(x1,100);
+cancelTimer(x2,50);
+setTimer(x1,50);
+setTimer(x2,100);
+}
+OnTimer x1
+{
+output(M1);
+}
+OnTimer x2
+{
+output(M2);
+}
+}
+---------------------------------------------------------------
+Write the test case to verify desired signal value with 1000ms
+timeout.prnt the test verdict in
+
+
+
+variables
+{
+Timer T1;
+int expected value;
+int received value;
+}
+On start
+{
+setTimer(T1,1000);
+}
+OnTimer
+{
+if(expected value==received value)
+{
+CancelTimer(T1);
+write("Test passed:received value is %d",received value);
+}
+else
+{
+write("Test failed:received value is %d but expected value is %d",expected value,received value);
+}
+}
+------------------------------------------------------------------------------------------------
+
+Write a capl code defining a msg ID and transmitting it every 100ms on a key press event
+
+
+variables
+{
+message 0x301;
+Timer mytimer;
+}
+on key'a'
+{
+setTimer(myTimer,100);
+}
+onTimer
+{
+output(0x301);
+}
+on key'b'
+{
+CancelTimer(myTimer);
+}
+---------------------------------------------------------------------------------
+
+
+write a capl code to capture graphic window
+
+variables
+{
+}
+testcase Sample_testcase()
+{
+testwaitfortimeout(5000);
+TestReportAddwindowcapture("Graphics","vehiclespeed:vehiclespeedcrc:vehiclespeedclock","scrrenshot""/sample.jpg")
+}
+void Maintestcase()
+{
+Sample_testcase();
+stop();
+}
+------------------------------------------------------------------------------
+To capture trace window
+
+variables
+{
+}
+testcase Sample_testcase()
+{
+testwaitfortimeout(5000);
+testReportAddwindowcapture("Trace"," ","screenshot","/sample.jpg");
+}
+void Maintestcase()
+{
+Sample_testcase();
+stop();
+}
+-------------------------------------------------------
+To set logfilename
+
+variables
+{
+}
+void Main testcase()
+{
+setLogFileName("Logfile.asc"); //in ASIC format
+startLogging();
+testwaitfortimeout(5000);
+stoplogging();
+}
+
+setLogFileName("Logfile(Date).blf"); in binary format
+-----------------------------------------------------
+To set overspeed alert where intial speed=0,overspeed alert sarts from 120
+time tken to reach overspeed is depends on vehicle so the timeout may varies
+there are two test case in case 1 we need to change the time out based on vehicle speed to reach high speed
+in case 2 we are using while loop for which we dont know the timeperiod
+
+variables
+{
+}
+Testcase case_1()
+{
+teststep("VehicleSpeed","CurrentVehicleSpeed%d","$VehicleSpeed");//reading intial speed=0
+@NewVehicleSpeed=130;//setting new speed to 130
+testwaitfortimeout(1000);//we dont how much time it will take to reach to high speed
+teststep("VehicleSpeed","NewVehicleSpeed%d","$VehicleSpeed")//reading new vehicle speed after settind high speed
+teststep("SpeedAlert","SpeedAlert%d",@OverSpeedAlert");
+}
+Testcase case_2()
+{
+teststep("VehicleSpeed","CurrentVehicleSpeed%d","$VehicleSpeed");//reading intial speed=0
+@NewVehicleSpeed=130;
+while($VehicleSpeed<=120)//continue while loop to reach vehiclespeed to upto 120
+{
+testwaitfortimeout(1000);
+}
+teststep("VehicleSpeed","NewVehicleSpeed%d","$VehicleSpeed")//reading new vehicle speed after setting high speed
+teststep("SpeedAlert","SpeedAlert%d",@OverSpeedAlert");
+}
+void MainTest()
+{
+Case_2();
+stop();
+}
+-------------------------------------------------------------------------
+To read and wrrite the data using key press event
+
+variables
+{
+message 0x713 msg; //CAN request ID
+message 0x7c9 msg;
+byre check_byte0;
+}
+on key'a'
+{
+msg.byte(0)=0x02;       //PCI length
+msg.byte(1)=0x10;       //Diagnostic ID
+msg.byte(2)=0x02;       //extended session
+msg.byte(3)=0x00;       //1byte==8 bits for whichwe need to send only 2bits remaining keep it as 0
+msg.byte(4)=0x00;         
+msg.byte(5)=0x00;        //we are entering into extended session to keep write data secure
+msg.byte(6)=0x00;
+msg.byte(7)=0x00;
+output(msg);
+}
+on key'b'
+{
+msg.byte(0)=0x05;       //PCI length
+msg.byte(1)=0x2E;       //Service ID to write data
+msg.byte(2)=0x06;       //DID
+msg.byte(3)=0x19;       
+msg.byte(4)=0x01;        //Data to write  
+msg.byte(5)=0x01;        
+msg.byte(6)=0x00;       //remaining left it as 0
+msg.byte(7)=0x00;
+output(msg);
+}
+on key'c'
+{
+msg.byte(0)=0x02;       //PCI length
+msg.byte(1)=0x22;       //Service ID to read data
+msg.byte(2)=0x06;       //DID
+msg.byte(3)=0x19;       
+msg.byte(4)=0x00;        //Data to read 
+msg.byte(5)=0x00;        
+msg.byte(6)=0x00;       //remaining left it as 0
+msg.byte(7)=0x00;
+output(msg);
+}
+//if data is more than 7 bytes we need to send flow control frame from tester to sender to receive consecutive frames
+
+
+on message 0x7C9           //response ID of CAN
+{
+check.byte0=this.byte(0)  &0x30;
+if(check.byte0==0x10)
+{
+msg.dword(0)=0x30;   //indicates flowcontrolframe
+msg.dword(1)=0x00;   //indicates remaining data 
+outmsg(msg);
+}
+
+}
+----------------------------------------------------
+
+CAPL programming (DiagSetParameters)
+variables
+{
+diagRequest    Diag.DID_0x1518_Write Write_DID_0x1518;
+diagRequest    Diag.DID.0x1518_Read Read_DID_0x1518;
+}
+test case Diag_function()
+{
+if(0!=DiagsetTarget("Diag"))//Diag is ECU qualifier from canoe
+write("Error setting Target!")
+testwaitfortimeout(5000);
+diagsetparameter(Write_DID_0x1518,"byte1",0x01);//to write a value in subparameer of a diagnostic object
+diagsendRequest(Write_DID_0x1518);//its a funcion used to send the request object to the ECU
+testwaitfortimeout(5000);
+diagsendRequest(Read_DID_0x1518);//read request to theECU
+testwaitfortimeout(5000);
+}
+void maintest()
+{
+Diag_Function();
+stop();
+}
+-------------------------------
+
+
+
+
+
+
